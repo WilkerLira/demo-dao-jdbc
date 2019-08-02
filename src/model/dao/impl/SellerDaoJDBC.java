@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,39 @@ public class SellerDaoJDBC implements SellerDao {
 
 	@Override
 	public void insert(Seller obj) {
-		// TODO Auto-generated method stub
+		PreparedStatement st = null;
+		try {
+			st = con.prepareStatement(
+					"INSERT INTO seller "
+					+ "(Name, Email, BirthDate, BaseSalary, DepartmentId) "
+					+ "VALUES "
+					+ "(?, ?, ?, ?, ?)"
+					, Statement.RETURN_GENERATED_KEYS);
+			
+			st.setString(1, obj.getName());
+			st.setString(2, obj.getEmail());
+			st.setDate(3, new java.sql.Date(obj.getBirthDate().getTime()));
+			st.setDouble(4, obj.getBaseSalary());
+			st.setInt(5, obj.getDepartment().getId());
+			
+			int rowsAffected = st.executeUpdate();
+			if (rowsAffected > 0) {
+				ResultSet rs = st.getGeneratedKeys();
+				if (rs.next()) {
+					int id = rs.getInt(1);
+					obj.setId(id);
+				}
+				DB.closeResultSet(rs);
+			
+			}else {
+				throw new DbException("Erro inesperado, nenhuma linha foi afetada!");
+			}
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		
+		}finally {
+			DB.closeStatement(st);
+		}
 
 	}
 
@@ -47,11 +80,9 @@ public class SellerDaoJDBC implements SellerDao {
 		ResultSet rSet = null;
 		try {
 			pStatement = con.prepareStatement(
-					"SELECT seller.*,department.Name as DepName "
-					+ "FROM seller INNER JOIN department "
-					+ "ON seller.DepartmentId = department.Id "
-					+ "WHERE seller.Id = ?");
-			
+					"SELECT seller.*,department.Name as DepName " + "FROM seller INNER JOIN department "
+							+ "ON seller.DepartmentId = department.Id " + "WHERE seller.Id = ?");
+
 			pStatement.setInt(1, id);
 			rSet = pStatement.executeQuery();
 			if (rSet.next()) {
@@ -63,8 +94,8 @@ public class SellerDaoJDBC implements SellerDao {
 
 		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
-		
-		}finally {
+
+		} finally {
 			DB.closeStatement(pStatement);
 			DB.closeResultSet(rSet);
 		}
@@ -94,24 +125,22 @@ public class SellerDaoJDBC implements SellerDao {
 		ResultSet rSet = null;
 		try {
 			pStatement = con.prepareStatement(
-					"SELECT seller.*,department.Name as DepName "
-					+"FROM seller INNER JOIN department "
-					+"ON seller.DepartmentId = department.Id "
-					+"ORDER BY Name");
-			
+					"SELECT seller.*,department.Name as DepName " + "FROM seller INNER JOIN department "
+							+ "ON seller.DepartmentId = department.Id " + "ORDER BY Name");
+
 			rSet = pStatement.executeQuery();
-			
+
 			List<Seller> list = new ArrayList<>();
 			Map<Integer, Department> map = new HashMap<>();
 			while (rSet.next()) {
-				
+
 				Department depart = map.get(rSet.getInt("DepartmentId"));
-				
+
 				if (depart == null) {
 					depart = instantiateDepartment(rSet);
 					map.put(rSet.getInt("DepartmentId"), depart);
 				}
-				
+
 				Seller obj = instantiateSeller(rSet, depart);
 				list.add(obj);
 			}
@@ -119,8 +148,8 @@ public class SellerDaoJDBC implements SellerDao {
 
 		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
-		
-		}finally {
+
+		} finally {
 			DB.closeStatement(pStatement);
 			DB.closeResultSet(rSet);
 		}
@@ -133,26 +162,23 @@ public class SellerDaoJDBC implements SellerDao {
 		ResultSet rSet = null;
 		try {
 			pStatement = con.prepareStatement(
-					"SELECT seller.*,department.Name as DepName "
-					+"FROM seller INNER JOIN department "
-					+"ON seller.DepartmentId = department.Id "
-					+"WHERE DepartmentId = ? "
-					+"ORDER BY Name");
-			
+					"SELECT seller.*,department.Name as DepName " + "FROM seller INNER JOIN department "
+							+ "ON seller.DepartmentId = department.Id " + "WHERE DepartmentId = ? " + "ORDER BY Name");
+
 			pStatement.setInt(1, department.getId());
 			rSet = pStatement.executeQuery();
-			
+
 			List<Seller> list = new ArrayList<>();
 			Map<Integer, Department> map = new HashMap<>();
 			while (rSet.next()) {
-				
+
 				Department depart = map.get(rSet.getInt("DepartmentId"));
-				
+
 				if (depart == null) {
 					depart = instantiateDepartment(rSet);
 					map.put(rSet.getInt("DepartmentId"), depart);
 				}
-				
+
 				Seller obj = instantiateSeller(rSet, department);
 				list.add(obj);
 			}
@@ -160,8 +186,8 @@ public class SellerDaoJDBC implements SellerDao {
 
 		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
-		
-		}finally {
+
+		} finally {
 			DB.closeStatement(pStatement);
 			DB.closeResultSet(rSet);
 		}

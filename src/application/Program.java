@@ -1,5 +1,6 @@
 package application;
 
+import java.util.Date;
 import java.util.List;
 
 import model.dao.DaoFactory;
@@ -29,6 +30,12 @@ public class Program {
 		for (Seller obj : list) {
 			System.out.println(obj);
 		}
+		
+		//Esse bloco não da erro porque, no banco de dados  na coluna Id não aceita nulo
+		System.out.println("\n=== TEST 4: seller insert =====");
+		Seller seller2 = new Seller(null, "Greg", "greg@gmail.com", new Date(), 4000.0, department);
+		sellerDao.insert(seller2);
+		System.out.println("Inserted! new id = " + seller2.getId());
 	}
 
 }
